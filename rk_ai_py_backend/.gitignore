@@ -1,0 +1,7 @@
+.env
+venv
+bin
+lib
+include
+*.pyc   
+pyvenv.cfg

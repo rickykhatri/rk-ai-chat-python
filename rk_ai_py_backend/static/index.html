@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>RK AI Chat</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #f5f7fb;
+    --panel: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --user: #2563eb;
+    --ai: #f1f5f9;
+    --sidebar: #111827;
+}
+
+body.dark {
+    --bg: #0f172a;
+    --panel: #111827;
+    --border: #273244;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --ai: #1e293b;
+    --sidebar: #020617;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* Main layout */
+
+.app {
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
+
+/* Sidebar */
+
+.sidebar {
+    width: 250px;
+    background: var(--sidebar);
+    color: white;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    transition: 0.25s;
+}
+
+.logo {
+    font-size: 21px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.new-chat {
+    width: 100%;
+    border: 1px solid #374151;
+    background: #1f2937;
+    color: white;
+    padding: 11px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.new-chat:hover {
+    background: #374151;
+}
+
+.history-title {
+    margin-top: 25px;
+    font-size: 12px;
+    color: #9ca3af;
+    text-transform: uppercase;
+}
+
+.history {
+    margin-top: 10px;
+    overflow-y: auto;
+}
+
+.history-item {
+    padding: 10px;
+    border-radius: 7px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 4px;
+}
+
+.history-item:hover {
+    background: #1f2937;
+}
+
+.sidebar-bottom {
+    margin-top: auto;
+}
+
+.theme-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid #374151;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Chat */
+
+.chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Header */
+
+.header {
+    height: 65px;
+    padding: 0 22px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    background: #22c55e;
+    border-radius: 50%;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* Messages */
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px;
+    scroll-behavior: smooth;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 22px;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message.ai {
+    justify-content: flex-start;
+}
+
+.message-content {
+    max-width: 75%;
+}
+
+.bubble {
+    padding: 13px 16px;
+    border-radius: 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.user .bubble {
+    background: var(--user);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.ai .bubble {
+    background: var(--ai);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+}
+
+.message-time {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+}
+
+.user .message-time {
+    text-align: right;
+}
+
+.message-actions {
+    margin-top: 5px;
+}
+
+.copy-btn {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.copy-btn:hover {
+    color: var(--primary);
+}
+
+/* Welcome */
+
+.welcome {
+    text-align: center;
+    max-width: 600px;
+    margin: 70px auto;
+}
+
+.welcome-icon {
+    font-size: 48px;
+}
+
+.welcome h1 {
+    margin-bottom: 8px;
+}
+
+.welcome p {
+    color: var(--muted);
+}
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.suggestion {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.suggestion:hover {
+    border-color: var(--primary);
+}
+
+/* Input */
+
+.input-wrapper {
+    padding: 15px 20px 20px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+}
+
+.input-area {
+    max-width: 900px;
+    margin: auto;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.textarea-container {
+    flex: 1;
+    position: relative;
+}
+
+.input-area textarea {
+    width: 100%;
+    resize: none;
+    min-height: 52px;
+    max-height: 180px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    padding: 15px 55px 15px 15px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+}
+
+.input-area textarea:focus {
+    border-color: var(--primary);
+}
+
+.char-count {
+    position: absolute;
+    right: 12px;
+    bottom: 9px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.send {
+    height: 52px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    padding: 0 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.send:hover {
+    background: var(--primary-dark);
+}
+
+.send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.footer-note {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+/* Typing */
+
+.typing {
+    display: flex;
+    gap: 5px;
+    padding: 5px;
+}
+
+.typing span {
+    width: 7px;
+    height: 7px;
+    background: #94a3b8;
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+}
+
+.typing span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.typing span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes bounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+
+    30% {
+        transform: translateY(-5px);
+    }
+}
+
+.copyright {
+    text-align: center;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.copyright strong {
+    color: var(--text);
+    font-weight: 600;
+}
+/* Mobile */
+
+.mobile-menu {
+    display: none;
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--text);
+}
+
+@media(max-width: 700px) {
+
+    .sidebar {
+        position: fixed;
+        z-index: 10;
+        left: -250px;
+        top: 0;
+        bottom: 0;
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
+
+    .mobile-menu {
+        display: block;
+    }
+
+    .messages {
+        padding: 18px;
+    }
+
+    .message-content {
+        max-width: 90%;
+    }
+
+    .input-wrapper {
+        padding: 10px;
+    }
+
+    .send {
+        padding: 0 15px;
+    }
+
+    .welcome {
+        margin: 40px auto;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+
+    <aside id="sidebar" class="sidebar">
+
+        <div class="logo">
+            🤖 RK AI
+        </div>
+
+        <button class="new-chat" onclick="newChat()">
+            ＋ New Chat
+        </button>
+
+        <div class="history-title">
+            Conversations
+        </div>
+
+        <div id="history" class="history"></div>
+
+        <div class="sidebar-bottom">
+
+            <button
+                class="theme-btn"
+                onclick="toggleTheme()">
+
+                🌓 Toggle Theme
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- Chat -->
+
+    <main class="chat">
+
+        <header class="header">
+
+            <div class="header-title">
+
+                <button
+                    class="mobile-menu"
+                    onclick="toggleSidebar()">
+
+                    ☰
+
+                </button>
+
+                <span class="status-dot"></span>
+
+                <h2>RK AI Assistant</h2>
+
+            </div>
+
+            <button
+                class="copy-btn"
+                onclick="clearMessages()">
+
+                Clear
+
+            </button>
+
+        </header>
+
+
+        <!-- Messages -->
+
+        <section
+            id="messages"
+            class="messages">
+
+            <div class="welcome">
+
+                <div class="welcome-icon">
+                    🤖
+                </div>
+
+                <h1>
+                    How can I help you?
+                </h1>
+
+                <p>
+                    Ask me anything. I'm powered by your AI backend.
+                </p>
+
+                <div class="suggestions">
+
+                    <button
+                        class="suggestion"
+                        onclick="useSuggestion('Explain Python to me')">
+
+                        Explain Python
+
+                    </button>
+
+                    <button
+                        class="suggestion"
+                        onclick="useSuggestion('Help me build a FastAPI backend')">
+
+                        Build FastAPI
+
+                    </button>
+
+                    <button
+                        class="suggestion"
+                        onclick="useSuggestion('How do I connect MongoDB with Python?')">
+
+                        MongoDB + Python
+
+                    </button>
+
+                    <button
+                        class="suggestion"
+                        onclick="useSuggestion('Explain how Ollama works')">
+
+                        Explain Ollama
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Input -->
+
+        <div class="input-wrapper">
+
+            <div class="input-area">
+
+                <div class="textarea-container">
+
+                    <textarea
+                        id="message"
+                        rows="1"
+                        maxlength="4000"
+                        placeholder="Ask something..."></textarea>
+
+                    <span
+                        id="charCount"
+                        class="char-count">
+
+                        0 / 4000
+
+                    </span>
+
+                </div>
+
+                <button
+                    id="send"
+                    class="send"
+                    onclick="sendMessage()">
+
+                    Send
+
+                </button>
+
+            </div>
+
+            <div class="footer-note">
+                    Enter to send · Shift + Enter for new line
+            </div>
+
+            <div class="copyright">
+                 © 2026 Designed & Developed by <strong>Ricky Khatri</strong>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+const messageInput =
+    document.getElementById("message");
+
+const messages =
+    document.getElementById("messages");
+
+const sendButton =
+    document.getElementById("send");
+
+const charCount =
+    document.getElementById("charCount");
+
+const history =
+    document.getElementById("history");
+
+const sidebar =
+    document.getElementById("sidebar");
+
+
+let conversations =
+    JSON.parse(
+        localStorage.getItem("rk_conversations") || "[]"
+    );
+
+
+/* =========================
+   Utility
+========================= */
+
+function getTime() {
+
+    return new Date().toLocaleTimeString(
+        [],
+        {
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
+
+}
+
+
+/* =========================
+   Add message
+========================= */
+
+function addMessage(
+    text,
+    type,
+    isHtml = false
+) {
+
+    const wrapper =
+        document.createElement("div");
+
+    wrapper.className =
+        `message ${type}`;
+
+    const content =
+        document.createElement("div");
+
+    content.className =
+        "message-content";
+
+    const bubble =
+        document.createElement("div");
+
+    bubble.className =
+        "bubble";
+
+    if (isHtml) {
+
+        bubble.innerHTML =
+            text;
+
+    } else {
+
+        bubble.textContent =
+            text;
+
+    }
+
+    content.appendChild(bubble);
+
+
+    const time =
+        document.createElement("div");
+
+    time.className =
+        "message-time";
+
+    time.textContent =
+        getTime();
+
+    content.appendChild(time);
+
+
+    if (type === "ai") {
+
+        const actions =
+            document.createElement("div");
+
+        actions.className =
+            "message-actions";
+
+        const copy =
+            document.createElement("button");
+
+        copy.className =
+            "copy-btn";
+
+        copy.textContent =
+            "📋 Copy";
+
+        copy.onclick =
+            () => copyText(text);
+
+        actions.appendChild(copy);
+
+        content.appendChild(actions);
+
+    }
+
+
+    wrapper.appendChild(content);
+
+    messages.appendChild(wrapper);
+
+    messages.scrollTop =
+        messages.scrollHeight;
+
+}
+
+/* =========================
+   Send message - STREAMING
+========================= */
+
+async function sendMessage() {
+
+    const message =
+        messageInput.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+
+    // Remove welcome screen
+    const welcome =
+        document.querySelector(".welcome");
+
+    if (welcome) {
+        welcome.remove();
+    }
+
+
+    // Add user's message
+    addMessage(
+        message,
+        "user"
+    );
+
+
+    // Clear input
+    messageInput.value = "";
+
+    updateCharacterCount();
+
+    autoResize();
+
+
+    // Disable send button
+    sendButton.disabled = true;
+
+
+    // Create AI message bubble
+    const aiMessage =
+        document.createElement("div");
+
+    aiMessage.className =
+        "message ai";
+
+
+    const aiContent =
+        document.createElement("div");
+
+    aiContent.className =
+        "message-content";
+
+
+    const aiBubble =
+        document.createElement("div");
+
+    aiBubble.className =
+        "bubble";
+
+
+    aiBubble.textContent =
+        "Thinking...";
+
+
+    aiContent.appendChild(
+        aiBubble
+    );
+
+
+    aiMessage.appendChild(
+        aiContent
+    );
+
+
+    messages.appendChild(
+        aiMessage
+    );
+
+
+    messages.scrollTop =
+        messages.scrollHeight;
+
+
+    let aiText = "";
+
+
+    try {
+
+        /*
+         * Call FastAPI
+         *
+         * Backend should return
+         * StreamingResponse
+         */
+
+        const response =
+            await fetch(
+                "/chat_ai/" + encodeURIComponent(message),
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    // body: JSON.stringify({
+                    //     prompt: message
+                    // })
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                await response.text()
+            );
+
+        }
+
+
+        /*
+         * Check that browser supports
+         * streaming response
+         */
+
+        if (!response.body) {
+
+            throw new Error(
+                "Streaming is not supported by this browser."
+            );
+
+        }
+
+
+        const reader =
+            response.body.getReader();
+
+
+        const decoder =
+            new TextDecoder();
+
+
+        /*
+         * Read stream
+         */
+
+        while (true) {
+
+            const {
+                value,
+                done
+            } = await reader.read();
+
+
+            if (done) {
+                break;
+            }
+
+
+            /*
+             * Convert bytes to text
+             */
+
+            const chunk =
+                decoder.decode(
+                    value,
+                    {
+                        stream: true
+                    }
+                );
+
+
+            /*
+             * Add chunk to complete response
+             */
+
+            aiText += chunk;
+
+
+            /*
+             * Update AI bubble
+             */
+
+            aiBubble.innerHTML =
+                formatAIResponse(
+                    aiText
+                );
+
+
+            /*
+             * Keep chat scrolled
+             * to latest response
+             */
+
+            messages.scrollTop =
+                messages.scrollHeight;
+
+        }
+
+
+        /*
+         * Add timestamp
+         */
+
+        const time =
+            document.createElement("div");
+
+        time.className =
+            "message-time";
+
+        time.textContent =
+            getTime();
+
+
+        aiContent.appendChild(
+            time
+        );
+
+
+        /*
+         * Add copy button
+         */
+
+        const actions =
+            document.createElement("div");
+
+        actions.className =
+            "message-actions";
+
+
+        const copy =
+            document.createElement("button");
+
+        copy.className =
+            "copy-btn";
+
+        copy.textContent =
+            "📋 Copy";
+
+
+        copy.onclick =
+            () => copyText(aiText);
+
+
+        actions.appendChild(
+            copy
+        );
+
+
+        aiContent.appendChild(
+            actions
+        );
+
+
+        /*
+         * Save conversation
+         */
+
+        saveConversation(
+            message,
+            aiText
+        );
+
+
+    } catch (error) {
+
+        aiBubble.textContent =
+            "❌ Error: " +
+            error.message;
+
+    }
+
+
+    /*
+     * Re-enable Send
+     */
+
+    sendButton.disabled =
+        false;
+
+    messageInput.focus();
+
+}
+
+/* =========================
+   Typing indicator
+========================= */
+
+function createTyping() {
+
+    const wrapper =
+        document.createElement("div");
+
+    wrapper.className =
+        "message ai";
+
+
+    const content =
+        document.createElement("div");
+
+    content.className =
+        "message-content";
+
+
+    const bubble =
+        document.createElement("div");
+
+    bubble.className =
+        "bubble";
+
+
+    const typing =
+        document.createElement("div");
+
+    typing.className =
+        "typing";
+
+
+    for (let i = 0; i < 3; i++) {
+
+        const dot =
+            document.createElement("span");
+
+        typing.appendChild(dot);
+
+    }
+
+
+    bubble.appendChild(typing);
+
+    content.appendChild(bubble);
+
+    wrapper.appendChild(content);
+
+    messages.appendChild(wrapper);
+
+    messages.scrollTop =
+        messages.scrollHeight;
+
+
+    return wrapper;
+
+}
+
+
+/* =========================
+   AI formatting
+========================= */
+
+function formatAIResponse(text) {
+
+    return escapeHtml(text)
+        .replace(
+            /\*\*(.*?)\*\*/g,
+            "<strong>$1</strong>"
+        )
+        .replace(
+            /`([^`]+)`/g,
+            "<code>$1</code>"
+        )
+        .replace(
+            /\n/g,
+            "<br>"
+        );
+
+}
+
+
+function escapeHtml(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================
+   Copy
+========================= */
+
+async function copyText(text) {
+
+    try {
+
+        await navigator.clipboard.writeText(
+            text
+        );
+
+        alert("Copied!");
+
+    } catch {
+
+        alert("Unable to copy.");
+
+    }
+
+}
+
+
+/* =========================
+   New chat
+========================= */
+
+function newChat() {
+
+    messages.innerHTML = "";
+
+    addMessage(
+        "Hello! 👋\n\nI'm your AI assistant. Ask me anything.",
+        "ai"
+    );
+
+    messageInput.focus();
+
+}
+
+
+/* =========================
+   Clear messages
+========================= */
+
+function clearMessages() {
+
+    messages.innerHTML = "";
+
+    addMessage(
+        "Conversation cleared. 👋",
+        "ai"
+    );
+
+}
+
+
+/* =========================
+   Suggestions
+========================= */
+
+function useSuggestion(text) {
+
+    messageInput.value =
+        text;
+
+    updateCharacterCount();
+
+    autoResize();
+
+    messageInput.focus();
+
+}
+
+
+/* =========================
+   Character count
+========================= */
+
+function updateCharacterCount() {
+
+    charCount.textContent =
+        `${messageInput.value.length} / 4000`;
+
+}
+
+
+messageInput.addEventListener(
+    "input",
+    function() {
+
+        updateCharacterCount();
+
+        autoResize();
+
+    }
+);
+
+
+/* =========================
+   Enter key
+========================= */
+
+messageInput.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            sendMessage();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   Auto resize textarea
+========================= */
+
+function autoResize() {
+
+    messageInput.style.height =
+        "auto";
+
+    messageInput.style.height =
+        Math.min(
+            messageInput.scrollHeight,
+            180
+        ) + "px";
+
+}
+
+
+/* =========================
+   Theme
+========================= */
+
+function toggleTheme() {
+
+    document.body.classList.toggle(
+        "dark"
+    );
+
+    localStorage.setItem(
+        "rk_theme",
+        document.body.classList.contains("dark")
+            ? "dark"
+            : "light"
+    );
+
+}
+
+
+if (
+    localStorage.getItem("rk_theme")
+    === "dark"
+) {
+
+    document.body.classList.add("dark");
+
+}
+
+
+/* =========================
+   Sidebar
+========================= */
+
+function toggleSidebar() {
+
+    sidebar.classList.toggle(
+        "open"
+    );
+
+}
+
+
+/* =========================
+   Local conversation history
+========================= */
+
+function saveConversation(
+    question,
+    answer
+) {
+
+    conversations.unshift({
+        question,
+        answer,
+        time: new Date().toISOString()
+    });
+
+
+    conversations =
+        conversations.slice(
+            0,
+            20
+        );
+
+
+    localStorage.setItem(
+        "rk_conversations",
+        JSON.stringify(conversations)
+    );
+
+
+    renderHistory();
+
+}
+
+
+function renderHistory() {
+
+    history.innerHTML = "";
+
+    conversations.forEach(
+        (conversation, index) => {
+
+            const item =
+                document.createElement("div");
+
+            item.className =
+                "history-item";
+
+            item.textContent =
+                conversation.question
+                    .substring(0, 30);
+
+            item.onclick =
+                () => loadConversation(index);
+
+            history.appendChild(item);
+
+        }
+    );
+
+}
+
+
+function loadConversation(index) {
+
+    const conversation =
+        conversations[index];
+
+    messages.innerHTML = "";
+
+    addMessage(
+        conversation.question,
+        "user"
+    );
+
+    addMessage(
+        conversation.answer,
+        "ai"
+    );
+
+}
+
+
+/* Initial history */
+
+renderHistory();
+
+messageInput.focus();
+
+</script>
+
+</body>
+</html>
