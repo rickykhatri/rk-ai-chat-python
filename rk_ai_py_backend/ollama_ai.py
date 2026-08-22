@@ -16,6 +16,11 @@ def stream_ollama_response(prompt: str):
 
     response = requests.post(
         f"{ollama_base_url}/api/chat",
+         headers={
+            "Content-Type": "application/json",
+            "Accept": "application/x-ndjson"
+            #"ngrok-skip-browser-warning": "true"
+        },
         json={
             "model": ollama_model,
             "messages": [
