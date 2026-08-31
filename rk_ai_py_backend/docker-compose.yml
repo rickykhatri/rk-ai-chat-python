@@ -12,3 +12,16 @@ services:
 
     ports:
       - "127.0.0.1:8000:8000"
+
+  rk-mcp:
+    build: .
+    container_name: rk-mcp
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    command: python rk_chat_mcp_server.py
+
+    ports:
+      - "127.0.0.1:8001:8001"
